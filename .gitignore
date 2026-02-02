@@ -30,3 +30,11 @@ pdf_cache/*.pdf
 # DB SQLite files
 *.sqlite
 chroma_db/
+
+# Podcast audio files
+podcast_audio/*.mp3
+podcast_audio/*.wav
+
+# Python cache files
+__pycache__/
+*.pyc

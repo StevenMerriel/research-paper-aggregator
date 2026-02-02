@@ -52,6 +52,10 @@ class AISafetyKnowledgeBase:
         except Exception as e:
             print(f"Error retrieving paper: {e}")
         return None
+    
+    def get_all_papers(self) -> Dict:
+        """Retrieve all papers from the database"""
+        return self.papers_collection.get()
 
     def store_paper(
         self,
@@ -79,6 +83,7 @@ class AISafetyKnowledgeBase:
                     "summary_method": summary_method,
                     "processed_at": datetime.now().isoformat(),
                     "zotero_key": zotero_key,
+                    "content": paper.get("content", ""),
                 }
             ],
         )

@@ -6,6 +6,8 @@ import pymupdf
 import tiktoken
 from typing import List, Dict, Optional
 
+from src.structs import ResearchPaperContent
+
 
 class PaperSummarizer:
     def __init__(
@@ -219,6 +221,23 @@ Write as a unified narrative, not as separate sections."""
 
         print(f"  📄 Extracted {len(full_text)} characters")
 
+        # Detect sections
+        sections = self.detect_sections(full_text)
+        print(f"  🗂️ Detected sections: {list(sections.keys())}")
+
+        content: ResearchPaperContent = {
+            "sections": list(sections.keys()),
+            "figures": [],  # Placeholder, implement figure extraction if needed
+            "tables": [],   # Placeholder, implement table extraction if needed
+            "abstract": sections.get("abstract", ""),
+            "introduction": sections.get("introduction", ""),
+            "methods": sections.get("methods", ""),
+            "results": sections.get("results", ""),
+            "discussion": sections.get("discussion", ""),
+            "conclusion": sections.get("conclusion", ""),
+            "references": sections.get("references", []),
+        }
+
         # Remove references section to save tokens
         text_no_refs = re.split(
             r"\n\s*(?:REFERENCES|References)\s*\n", full_text, maxsplit=1
@@ -231,7 +250,7 @@ Write as a unified narrative, not as separate sections."""
         if token_count < 50000:  # Well within Claude's context window
             print("Creating summary in single pass")
             if not self.client:
-                return {"summary": paper["abstract"], "method": "abstract_only"}
+                return {"summary": text_no_refs, "method": "abstract_only", "content": content}
 
             prompt = f"""Analyze and summarize this research paper comprehensively.
 
@@ -259,6 +278,7 @@ Focus on the actual content and findings, not just the abstract."""
                 return {
                     "summary": message.content[0].text,
                     "method": "full_text_single_pass",
+                    "content": content,
                 }
             except Exception as e:
                 print(f"  ❌ Error in single pass: {e}")
@@ -284,4 +304,5 @@ Focus on the actual content and findings, not just the abstract."""
         return {
             "summary": final_summary,
             "method": f"hierarchical_{len(chunks)}_chunks",
+            "content": content,
         }
